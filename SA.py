@@ -36,10 +36,16 @@ References
 
 import numpy as np
 import random
+import math
 
-from uhaopt.util import check_bounds
-from uhaopt.util import dump_results
-from uhaopt.util import mu_inv
+from util import check_bounds
+from util import dump_results
+from util import mu_inv
+from Fonction_objectif import sphere
+from Fonction_objectif import objfRastrigin
+from Fonction_objectif import objfRosenbrock
+from Fonction_objectif import objfGriewank
+
 
 __author__ = "Hojjat Rakhshani and Lhassane Idoumghar"
 __license__ = "MIT"
@@ -79,30 +85,49 @@ class SA:
     to the output.
     """
 
-    def __init__(self, cost_func=None, bounds=None, repeat_num=10, dimension=2, max_evaluations=100,
-                 tol=1.0e-4, x0=None, cost=None, display=True, save_directory=None, save_results=False):
 
-        assert cost_func is not None, "Please pass a valid cost function for your optimization problems"
+    def __init__(self, cost_func= None, bounds=None, repeat_num=30, dimension=30, max_evaluations=30,
+                 tol=1.0e-4, x0=None, cost=None, display=True, save_directory=None, save_results=False):
+        #assert cost_func is not None, "Please pass a valid cost function for your optimization problems"
         assert len(bounds) == dimension, "The bounds and dimension parameters should have equal dimensions."
 
-        Mmax = int(max_evaluations * 2 / repeat_num)
+        parameter = np.array[0.2, 2, 1.0]
+        alpha = parameter[0]
+        beta = parameter[1] #attractivite/luminosite
+        gamma = parameter[2]    #coef d absorption
+        lowerbound = parameter[3]
+        upperbound = parameter[4]
+
+        for i in range (dimension):
+            bounds[i][0] = lowerbound
+            bounds[i][1] = upperbound
+
+        #Mmax = int(max_evaluations * 2 / repeat_num)
 
         if x0 is None:
 
             x0 = []
+            light = []
 
-			# initialization
-            for j in range(dimension):
-                x0.append(random.uniform(bounds[j][0], bounds[j][1]))
+			# initialization population
+            for i in range (repeat_num):
+                for j in range(dimension):
+                    x0.append(random.uniform(1,dimension)*(upperbound-lowerbound)+lowerbound) #position luciole
+                    light.append(beta)
 
-            x0 = np.array(x0).reshape(dimension)
+                x0 = np.array(x0).reshape(dimension)
+
+        #cost_func = sphere(x0)
+        cost_func = objfRastrigin(x0)
+        #cost_func = objfGriewank(x0)
+        #cost_func = objfRosenbrock(x0)
 
         function_evaluations = 0
 
 		# Evalutation
         if cost is None:
             cost = []
-            cost_p = cost_func(x0)
+            cost_p = cost_func
 
             if type(cost_p) is not float:
 
@@ -121,27 +146,32 @@ class SA:
             cost = np.array(cost)
 
 		#  
-        x = x0.copy()
-        fx = cost
-        f0 = fx
+        x = x0.copy() #copie du tableau de population
+        fx = cost #tableau
+        f0 = fx #best solution
         
         # Main LOOP: for each iteration
-        for m in range(Mmax):
+        for m in range(max_evaluations):
 			# update the temperature         
-            T = m / Mmax
-            mu = 10 ** (T * 100)
-	
-				
-            for k in range(repeat_num):
-            
+            #T = m / Mmax
+            #mu = 10 ** (T * 100)
+            for i in range(repeat_num):
 	            # generate new solution         
-                dx = mu_inv(2 * np.random.rand(x.size) - 1, mu)
-                for i in range(len(x)):
-                    dx[i] = dx[i] * (bounds[i][1] - bounds[i][0])
+                #dx = mu_inv(2 * np.random.rand(x.size) - 1, mu)
+                for j in range(len(x)):
+                    if(light[j]>light[i]):
+                        # deplacement vers la luciole la plus lumineuse
+                        x[i]+=beta * (x[j]-x[i])+alpha
+                    else:
+                        # deplacement aleatoire
+                        x[i]+=alpha
 
-                trial_x = x.copy() + dx
+                    r = np.sum(np.sqrt(x[i]-x[j]))  # distance entre deux lucioles
+                    new_beta = beta * np.exp(-gamma * r)
+                    #dx[i] = dx[i] * (bounds[i][1] - bounds[i][0])
+                trial_x = x.copy() #+ dx
                 
-				# heck_bounds         				
+				#check_bounds
                 trial_x = check_bounds(solution=trial_x, bounds=bounds)
                 
                 # evaluate new solution
@@ -176,3 +206,4 @@ class SA:
 
                 if display:
                     print(['The best solution after ', function_evaluations, 'evaluations is: ', f0])
+
