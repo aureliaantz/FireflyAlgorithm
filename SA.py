@@ -41,11 +41,10 @@ import math
 from util import check_bounds
 from util import dump_results
 from util import mu_inv
-from Fonction_objectif import sphere
-from Fonction_objectif import objfRastrigin
-from Fonction_objectif import objfRosenbrock
-from Fonction_objectif import objfGriewank
-
+from Cost_function import sphere
+from Cost_function import objfRastrigin
+from Cost_function import objfRosenbrock
+from Cost_function import objfGriewank
 
 __author__ = "Hojjat Rakhshani and Lhassane Idoumghar"
 __license__ = "MIT"
@@ -89,18 +88,19 @@ class SA:
     def __init__(self, cost_func= None, bounds=None, repeat_num=30, dimension=30, max_evaluations=30,
                  tol=1.0e-4, x0=None, cost=None, display=True, save_directory=None, save_results=False):
         #assert cost_func is not None, "Please pass a valid cost function for your optimization problems"
-        assert len(bounds) == dimension, "The bounds and dimension parameters should have equal dimensions."
+        #assert len(bounds) == dimension, "The bounds and dimension parameters should have equal dimensions."
 
-        parameter = np.array[0.2, 2, 1.0]
+        parameter = np.array[0.2, 2, 1.0, -100, 100]
         alpha = parameter[0]
-        beta = parameter[1] #attractivite/luminosite
+        beta = parameter[1]     #attractivite/luminosite
         gamma = parameter[2]    #coef d absorption
         lowerbound = parameter[3]
         upperbound = parameter[4]
 
-        for i in range (dimension):
-            bounds[i][0] = lowerbound
-            bounds[i][1] = upperbound
+        if bounds is None:
+            for i in range (dimension):
+                bounds[i][0] = lowerbound
+                bounds[i][1] = upperbound
 
         #Mmax = int(max_evaluations * 2 / repeat_num)
 
@@ -118,7 +118,7 @@ class SA:
                 x0 = np.array(x0).reshape(dimension)
 
         #cost_func = sphere(x0)
-        cost_func = objfRastrigin(x0)
+        #cost_func = objfRastrigin(x0)
         #cost_func = objfGriewank(x0)
         #cost_func = objfRosenbrock(x0)
 
@@ -128,6 +128,8 @@ class SA:
         if cost is None:
             cost = []
             cost_p = cost_func
+            if save_directory is None:
+                save_directory='results'
 
             if type(cost_p) is not float:
 
@@ -177,17 +179,17 @@ class SA:
                 # evaluate new solution
                 trial_cost = cost_func(trial_x)
 				
-				# update function_evaluations
+				#update function_evaluations
                 if type(trial_cost) is not float:
 
                     function_evaluations = function_evaluations + 1
                     if save_results:
-                        dump_results(save_directory=save_directory, solution=trial_x, cost_dic=trial_cost,
-                                     current_evaluation=function_evaluations, initial_population=False)
+                       dump_results(save_directory=save_directory, solution=trial_x, cost_dic=trial_cost,
+                                    current_evaluation=function_evaluations, initial_population=False)
                 else:
-                    if save_results:
-                        dump_results(save_directory=save_directory, solution=trial_x, cost_dic=trial_cost,
-                                     current_evaluation=function_evaluations, initial_population=False)
+                   if save_results:
+                       dump_results(save_directory=save_directory, solution=trial_x, cost_dic=trial_cost,
+                                  current_evaluation=function_evaluations, initial_population=False)
 
                 df = trial_cost - fx
 
@@ -207,3 +209,6 @@ class SA:
                 if display:
                     print(['The best solution after ', function_evaluations, 'evaluations is: ', f0])
 
+
+firefly = SA(cost_func=objfRastrigin, bounds=None, repeat_num=30, dimension=30, max_evaluations=30,
+                 tol=1.0e-4, x0=None, cost=None, display=True, save_directory='./results', save_results=False)
