@@ -4,7 +4,6 @@ import math
 
 from util import check_bounds
 from util import dump_results
-from util import mu_inv
 from Cost_function import sphere
 from Cost_function import objfRastrigin
 from Cost_function import objfRosenbrock
@@ -16,7 +15,7 @@ class FOA:
         # assert cost_func is not None, "Please pass a valid cost function for your optimization problems"
         # assert len(bounds) == dimension, "The bounds and dimension parameters should have equal dimensions."
 
-        parameter = [0.2, 2, 1, -100, 100]
+        parameter = ([0.2, 2, 1, -100, 100])
         alpha = parameter[0]
         beta = parameter[1]  # attractivite/luminosite
         gamma = parameter[2]  # coef d absorption
@@ -26,10 +25,10 @@ class FOA:
         if bounds is None:
 
             bounds = []
+
             for i in range(dimension):
-                for j in range 1:
-                bounds[i][0] = lowerbound
-                bounds[i][1] = upperbound
+                    bounds.append(lowerbound)
+                    bounds.append(upperbound)
 
         if x0 is None:
 

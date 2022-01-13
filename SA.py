@@ -40,11 +40,11 @@ import math
 
 from util import check_bounds
 from util import dump_results
-from util import mu_inv
 from Cost_function import sphere
 from Cost_function import objfRastrigin
 from Cost_function import objfRosenbrock
 from Cost_function import objfGriewank
+
 
 __author__ = "Hojjat Rakhshani and Lhassane Idoumghar"
 __license__ = "MIT"
@@ -90,17 +90,12 @@ class SA:
         #assert cost_func is not None, "Please pass a valid cost function for your optimization problems"
         #assert len(bounds) == dimension, "The bounds and dimension parameters should have equal dimensions."
 
-        parameter = np.array[0.2, 2, 1.0, -100, 100]
+        parameter = np.array([0.2, 2, 1.0, -100, 100])
         alpha = parameter[0]
-        beta = parameter[1]     #attractivite/luminosite
+        beta = parameter[1] #attractivite/luminosite
         gamma = parameter[2]    #coef d absorption
         lowerbound = parameter[3]
         upperbound = parameter[4]
-
-        if bounds is None:
-            for i in range (dimension):
-                bounds[i][0] = lowerbound
-                bounds[i][1] = upperbound
 
         #Mmax = int(max_evaluations * 2 / repeat_num)
 
@@ -115,12 +110,16 @@ class SA:
                     x0.append(random.uniform(1,dimension)*(upperbound-lowerbound)+lowerbound) #position luciole
                     light.append(beta)
 
-                x0 = np.array(x0).reshape(dimension)
+                #x0 = np.array(x0).reshape(dimension)
 
         #cost_func = sphere(x0)
         #cost_func = objfRastrigin(x0)
         #cost_func = objfGriewank(x0)
         #cost_func = objfRosenbrock(x0)
+
+        if cost_func is None:
+            for i in range (repeat_num):
+                cost_func += objfRastrigin(x0)
 
         function_evaluations = 0
 
@@ -128,37 +127,37 @@ class SA:
         if cost is None:
             cost = []
             cost_p = cost_func
-            if save_directory is None:
-                save_directory='results'
 
-            if type(cost_p) is not float:
+            #if type(cost_p) is not float:
 
-                function_evaluations = function_evaluations + 1
-                if save_results:
-                    dump_results(save_directory=save_directory, solution=x0, cost_dic=cost_p,
-                                 current_evaluation=function_evaluations, initial_population=True)
-            else:
-                if save_results:
-                    dump_results(save_directory=save_directory, solution=x0, cost_dic=cost_p,
-                                 current_evaluation=function_evaluations, initial_population=True)
+             #   function_evaluations = function_evaluations + 1
+              #  if save_results:
+               #     dump_results(save_directory=save_directory, solution=x0, cost_dic=cost_p,
+                #                 current_evaluation=function_evaluations, initial_population=True)
+            #else:
+                #if save_results:
+                 #   dump_results(save_directory=save_directory, solution=x0, cost_dic=cost_p,
+                  #               current_evaluation=function_evaluations, initial_population=True)
             cost.append(cost_p)
 
-            if (min(cost) < tol) or (function_evaluations >= max_evaluations):
-                return
+            #if (min(cost) < tol) or (function_evaluations >= max_evaluations):
+             #   return
+
+            best = np.min(cost)
             cost = np.array(cost)
 
-		#  
+		#
         x = x0.copy() #copie du tableau de population
         fx = cost #tableau
         f0 = fx #best solution
-        
+
         # Main LOOP: for each iteration
         for m in range(max_evaluations):
-			# update the temperature         
+			# update the temperature
             #T = m / Mmax
             #mu = 10 ** (T * 100)
             for i in range(repeat_num):
-	            # generate new solution         
+	            # generate new solution
                 #dx = mu_inv(2 * np.random.rand(x.size) - 1, mu)
                 for j in range(len(x)):
                     if(light[j]>light[i]):
@@ -172,24 +171,24 @@ class SA:
                     new_beta = beta * np.exp(-gamma * r)
                     #dx[i] = dx[i] * (bounds[i][1] - bounds[i][0])
                 trial_x = x.copy() #+ dx
-                
+
 				#check_bounds
                 trial_x = check_bounds(solution=trial_x, bounds=bounds)
-                
+
                 # evaluate new solution
                 trial_cost = cost_func(trial_x)
-				
-				#update function_evaluations
+
+				# update function_evaluations
                 if type(trial_cost) is not float:
 
                     function_evaluations = function_evaluations + 1
                     if save_results:
-                       dump_results(save_directory=save_directory, solution=trial_x, cost_dic=trial_cost,
-                                    current_evaluation=function_evaluations, initial_population=False)
+                        dump_results(save_directory=save_directory, solution=trial_x, cost_dic=trial_cost,
+                                     current_evaluation=function_evaluations, initial_population=False)
                 else:
-                   if save_results:
-                       dump_results(save_directory=save_directory, solution=trial_x, cost_dic=trial_cost,
-                                  current_evaluation=function_evaluations, initial_population=False)
+                    if save_results:
+                        dump_results(save_directory=save_directory, solution=trial_x, cost_dic=trial_cost,
+                                     current_evaluation=function_evaluations, initial_population=False)
 
                 df = trial_cost - fx
 
@@ -198,7 +197,7 @@ class SA:
                     x = trial_x.copy()
                     fx = trial_cost
 
-				# update the best solution	
+				# update the best solution
                 if fx < f0:
                     f0 = fx
 
@@ -210,5 +209,14 @@ class SA:
                     print(['The best solution after ', function_evaluations, 'evaluations is: ', f0])
 
 
-firefly = SA(cost_func=objfRastrigin, bounds=None, repeat_num=30, dimension=30, max_evaluations=30,
-                 tol=1.0e-4, x0=None, cost=None, display=True, save_directory='./results', save_results=False)
+if __name__=='__main__':
+    run = 2
+    dimension=30
+    bounds = []
+    for i in range(dimension):
+        bounds.append(-100)
+        bounds.append(100)
+
+    argument = dict(cost_func=objfRastrigin,repeat_num=30,dimension=30,max_evaluations=30,tol=.0e-4,display=True,save_results=True)
+    for i in range(run):
+        SA(**argument, save_directory='results0'+str(i))
