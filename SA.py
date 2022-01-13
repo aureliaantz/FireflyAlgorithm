@@ -128,20 +128,20 @@ class SA:
             cost = []
             cost_p = cost_func
 
-            #if type(cost_p) is not float:
+            if type(cost_p) is not float:
 
-             #   function_evaluations = function_evaluations + 1
-              #  if save_results:
-               #     dump_results(save_directory=save_directory, solution=x0, cost_dic=cost_p,
-                #                 current_evaluation=function_evaluations, initial_population=True)
-            #else:
-                #if save_results:
-                 #   dump_results(save_directory=save_directory, solution=x0, cost_dic=cost_p,
-                  #               current_evaluation=function_evaluations, initial_population=True)
+                function_evaluations = function_evaluations + 1
+                if save_results:
+                    dump_results(save_directory=save_directory, solution=x0, cost_dic=cost_p,
+                                 current_evaluation=function_evaluations, initial_population=True)
+            else:
+                if save_results:
+                    dump_results(save_directory=save_directory, solution=x0, cost_dic=cost_p,
+                              current_evaluation=function_evaluations, initial_population=True)
             cost.append(cost_p)
 
-            #if (min(cost) < tol) or (function_evaluations >= max_evaluations):
-             #   return
+            if (min(cost) < tol) or (function_evaluations >= max_evaluations):
+                return
 
             best = np.min(cost)
             cost = np.array(cost)
@@ -167,7 +167,7 @@ class SA:
                         # deplacement aleatoire
                         x[i]+=alpha
 
-                    r = np.sum(np.sqrt(x[i]-x[j]))  # distance entre deux lucioles
+                    r = np.sum(np.sqrt(x[i]-x[j]))  # distance entre deux lucioles i et j
                     new_beta = beta * np.exp(-gamma * r)
                     #dx[i] = dx[i] * (bounds[i][1] - bounds[i][0])
                 trial_x = x.copy() #+ dx
@@ -210,13 +210,16 @@ class SA:
 
 
 if __name__=='__main__':
-    run = 2
+    execution = 2
     dimension=30
     bounds = []
     for i in range(dimension):
-        bounds.append(-100)
-        bounds.append(100)
+        bounds.append(0)
+        bounds.append(1)
 
-    argument = dict(cost_func=objfRastrigin,repeat_num=30,dimension=30,max_evaluations=30,tol=.0e-4,display=True,save_results=True)
-    for i in range(run):
-        SA(**argument, save_directory='results0'+str(i))
+    argument = dict(cost_func=objfRastrigin,dimension=30,bounds=bounds,max_evaluations=30,tol=.0e-4,display=True,save_results=True)
+    for i in range(execution):
+        SA(**argument, save_directory='results'+str(i))
+
+
+

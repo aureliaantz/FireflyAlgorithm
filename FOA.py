@@ -1,6 +1,5 @@
 import numpy as np
 import random
-import math
 
 from util import check_bounds
 from util import dump_results
@@ -12,8 +11,6 @@ from Cost_function import objfGriewank
 class FOA:
     def __init__(self, cost_func=None, bounds=None, repeat_num=30, dimension=30, max_evaluations=30,
                  tol=1.0e-4, x0=None, cost=None, display=True, save_directory=None, save_results=False):
-        # assert cost_func is not None, "Please pass a valid cost function for your optimization problems"
-        # assert len(bounds) == dimension, "The bounds and dimension parameters should have equal dimensions."
 
         parameter = ([0.2, 2, 1, -100, 100])
         alpha = parameter[0]
@@ -40,13 +37,6 @@ class FOA:
                 for j in range(dimension):
                     x0.append(random.uniform(1, dimension) * (upperbound - lowerbound) + lowerbound)  # position luciole
                     light.append(beta)
-
-                x0 = np.array(x0).reshape(dimension)
-
-        # cost_func = sphere(x0)
-        # cost_func = objfRastrigin(x0)
-        # cost_func = objfGriewank(x0)
-        # cost_func = objfRosenbrock(x0)
 
         function_evaluations = 0
 
@@ -83,15 +73,15 @@ class FOA:
             for i in range(repeat_num):
                 # generate new solution
                 for j in range(len(x)):
-                    if (light[j] > light[i]):
+                    if light[j] > light[i]:
                         # deplacement vers la luciole la plus lumineuse
-                        x[i] += beta * (x[j] - x[i]) + alpha
+                        r = np.sum(np.sqrt(x[i] - x[j]))  # distance entre deux lucioles
+                        new_beta = beta * np.exp(-gamma * r)
+                        x[i] += new_beta * (x[j] - x[i]) + alpha
                     else:
                         # deplacement aleatoire
                         x[i] += alpha
 
-                    r = np.sum(np.sqrt(x[i] - x[j]))  # distance entre deux lucioles
-                    new_beta = beta * np.exp(-gamma * r)
                 trial_x = x.copy()
 
                 # check_bounds
@@ -131,5 +121,15 @@ class FOA:
                     print(['The best solution after ', function_evaluations, 'evaluations is: ', f0])
 
 
-firefly = FOA(cost_func=objfRastrigin, bounds=None, repeat_num=30, dimension=30, max_evaluations=30,
-             tol=1.0e-4, x0=None, cost=None, display=True, save_directory='./results', save_results=False)
+if __name__=='__main__':
+    execution = 2
+    dimension=30
+    bounds = []
+    for i in range (dimension):
+        bounds.append(-100)
+        bounds.append(100)
+    argument = dict(cost_func=objfRastrigin,repeat_num=30, dimension=len(bounds), bounds=bounds, max_evaluations=30, display=True,
+            save_results=True, tol=-1.0e-4)
+    for i in range (1,execution):
+        FOA(**argument, save_directory='results'+str(i))
+
